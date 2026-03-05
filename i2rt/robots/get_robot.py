@@ -33,6 +33,9 @@ def get_yam_robot(
     if gripper_type == GripperType.NO_GRIPPER:
         with_gripper = False
         with_teaching_handle = False
+    if gripper_type == GripperType.PEEL:
+        with_gripper = False
+        with_teaching_handle = False
 
     model_path = gripper_type.get_xml_path()
     motor_list = [
@@ -49,7 +52,7 @@ def get_yam_robot(
     joint_limits[:,1] += 0.15
 
     motor_directions = [1, 1, 1, 1, 1, 1]
-    kp = np.array([80, 80, 80, 40, 10, 10])
+    kp = np.array([80, 80, 80, 20, 10, 10])
     kd = np.array([5, 5, 5, 1.5, 1.5, 1.5])
     if with_gripper:
         motor_type = gripper_type.get_motor_type()
@@ -118,6 +121,7 @@ def get_yam_robot(
         kp=kp,
         kd=kd,
         zero_gravity_mode=zero_gravity_mode,
+        temp_record_flag=True,
     )
 
     if with_gripper:

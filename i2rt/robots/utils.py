@@ -16,6 +16,7 @@ YAM_XML_LW_GRIPPER_PATH = os.path.join(I2RT_ROOT, "robot_models/yam/yam_lw_gripp
 YAM_XML_LINEAR_4310_PATH = os.path.join(I2RT_ROOT, "robot_models/yam/yam_4310_linear.xml")
 YAM_TEACHING_HANDLE_PATH = os.path.join(I2RT_ROOT, "robot_models/yam/yam_teaching_handle.xml")
 YAM_NO_GRIPPER_PATH = os.path.join(I2RT_ROOT, "robot_models/yam/yam_no_gripper.xml")
+YAM_PEEL_PATH = os.path.join(I2RT_ROOT, "robot_models/yam/yam_peel.xml")
 
 class GripperType(enum.Enum):
     CRANK_4310 = "crank_4310"  # a 4310 motor with a crank
@@ -25,6 +26,8 @@ class GripperType(enum.Enum):
     # technically not a gripper
     YAM_TEACHING_HANDLE = "yam_teaching_handle"
     NO_GRIPPER = "no_gripper"
+
+    PEEL = 'peel'
 
     @classmethod
     def from_string_name(cls, name: str) -> "GripperType":
@@ -38,6 +41,8 @@ class GripperType(enum.Enum):
             return cls.YAM_TEACHING_HANDLE
         elif name == "no_gripper":
             return cls.NO_GRIPPER
+        elif name == "peel":
+            return cls.PEEL
         else:
             raise ValueError(
                 f"Unknown gripper type: {name}, gripper has to be one of the following: {GripperType.available_grippers()}"
@@ -51,7 +56,7 @@ class GripperType(enum.Enum):
             return 0.0, -2.7
         elif self in [GripperType.LINEAR_3507, GripperType.LINEAR_4310]:
             return None
-        elif self in [GripperType.YAM_TEACHING_HANDLE, GripperType.NO_GRIPPER]:
+        elif self in [GripperType.YAM_TEACHING_HANDLE, GripperType.NO_GRIPPER, GripperType.PEEL]:
             return None
 
     def get_gripper_needs_calibration(self) -> bool:
@@ -59,7 +64,7 @@ class GripperType(enum.Enum):
             return False
         elif self in [GripperType.LINEAR_3507, GripperType.LINEAR_4310]:
             return True
-        elif self in [GripperType.YAM_TEACHING_HANDLE, GripperType.NO_GRIPPER]:
+        elif self in [GripperType.YAM_TEACHING_HANDLE, GripperType.NO_GRIPPER, GripperType.PEEL]:
             return False
 
     def get_xml_path(self) -> str:
@@ -73,6 +78,9 @@ class GripperType(enum.Enum):
             return YAM_TEACHING_HANDLE_PATH
         elif self == GripperType.NO_GRIPPER:
             return YAM_NO_GRIPPER_PATH
+        elif self == GripperType.PEEL:
+            print("LOADING PEEEEEEEEEEL")
+            return YAM_PEEL_PATH
         else:
             raise ValueError(f"Unknown gripper type: {self}")
 
@@ -138,7 +146,7 @@ class GripperType(enum.Enum):
                     gripper_stroke=0.096,
                 ),
             )
-        elif self in [GripperType.YAM_TEACHING_HANDLE, GripperType.NO_GRIPPER]:
+        elif self in [GripperType.YAM_TEACHING_HANDLE, GripperType.NO_GRIPPER, GripperType.PEEL]:
             return -1.0, -1.0, -1.0, None
 
 

@@ -1,4 +1,5 @@
 import copy
+import datetime
 import logging
 import os
 import threading
@@ -15,6 +16,7 @@ from i2rt.motor_drivers.dm_driver import (
 from i2rt.robots.robot import Robot
 from i2rt.robots.utils import GripperForceLimiter, GripperType, JointMapper
 from i2rt.utils.mujoco_utils import MuJoCoKDL
+from scripts.visualize_joints import print_observations
 
 
 @dataclass
@@ -499,12 +501,11 @@ class MotorChainRobot(Robot):
         """Exit the runtime context related to this object."""
         self.close()
 
-    def move_joints(self, target_joint_positions: np.ndarray, time_interval_s: float = 2.0) -> None:
+    def move_joints(self, target_joint_positions: np.ndarray, time_interval_s: float = 2.0, steps=50) -> None:
         """Move the robot to a given joint positions."""
         with self._state_lock:
             current_pos = self._joint_state.pos
         assert len(current_pos) == len(target_joint_positions)
-        steps = 50  # 50 steps over time_interval_s
         for i in range(steps + 1):
             alpha = i / steps  # Interpolation factor
             target_pos = (1 - alpha) * current_pos + alpha * target_joint_positions  # Linear interpolation
@@ -546,10 +547,15 @@ if __name__ == "__main__":
     print(f"Initializing yam with gripper type: {gripper_type}")
     robot = get_yam_robot(args.channel, gripper_type=gripper_type)
 
+    time_start = datetime.datetime.now()
+
     if args.operation_mode == "gravity_comp":
-        while True:
-            # print(robot.get_observations())
+        while robot.motor_chain.running:
+            obs = robot.get_observations()
+            print(obs)
+            print_observations(robot)
             time.sleep(1)
+
     elif args.operation_mode == "test_gripper":
         assert gripper_type != GripperType.YAM_TEACHING_HANDLE, (
             "test_gripper is not supported for YAM_TEACHING_HANDLE, teaching handle is a passive device"
@@ -563,5 +569,20 @@ if __name__ == "__main__":
     elif args.operation_mode == "stay_current_qpos":
         current_qpos = robot.get_joint_pos()
         robot.command_joint_pos(current_qpos)
-        while True:
+        while  robot.motor_chain.running:
             time.sleep(1)
+    elif args.operation_mode == "move_to_pos":
+        current_qpos = robot.get_joint_pos()
+        print(current_qpos)
+        # joint_pos = np.array([1.59628443,  0.42095827,  0.58232242, -0.15850309,  0.00972763, -0.08640421])
+        joint_pos = np.array([1.64282444,  0.14286259,  0.09250782,  0.08564126,  0.02002747, -0.07953765])
+        joint_pos = np.array([1.61459525,  0.31757839,  0.20389868,  0.45338369,  0.04062715, -0.04940108])
+        joint_pos = np.array([3.16720073,  1.58751049,  0.41676204,  1.48565652,  0.06847486, -0.10204471])
+        current_qpos[:len(joint_pos)] = joint_pos
+        robot.move_joints(current_qpos, time_interval_s=5, steps=200)
+        while robot.motor_chain.running:
+            print_observations(robot)
+            time.sleep(1)
+    time_end = datetime.datetime.now()
+
+    print(f'robot could hold position for { time_end - time_start }')
