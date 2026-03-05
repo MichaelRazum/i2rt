@@ -16,7 +16,7 @@ from i2rt.motor_drivers.dm_driver import (
 from i2rt.robots.robot import Robot
 from i2rt.robots.utils import GripperForceLimiter, GripperType, JointMapper
 from i2rt.utils.mujoco_utils import MuJoCoKDL
-from scripts.visualize_joints import print_observations
+
 
 
 @dataclass
@@ -256,7 +256,7 @@ class MotorChainRobot(Robot):
             "joint_limits": self._joint_limits,
             "gripper_limits": self._gripper_limits,
             "gravity_comp_factor": self.gravity_comp_factor,
-            "limit_gripper_effort": self._limit_gripper_force,
+            "limit_gripper_effort": self._limit_gripper_force if self._gripper_index is not None else None,
             "gripper_index": self._gripper_index,
         }
 
